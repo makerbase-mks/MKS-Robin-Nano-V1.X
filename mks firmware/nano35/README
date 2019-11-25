@@ -1,0 +1,29 @@
+1.Firmware description:
+
+This firmware is provided with robin_nano motherboard +robin_tft35 display.
+
+2.Release Notes：
+The robin_nano35V_1.0.3 firmware is upgraded from robin_nano_v1.0.2. The following is the general modification of the upgrade test process:
+V1.0.3:
+（1）、Fix bug:When the temperature protection time is too long, the M303 cannot be adjusted.
+（2）、Add two UI styles, retro and simple.
+（3）、When the WIFI function is not enabled in the configuration file, the WIFI button in the interface is not displayed.
+（4）、The information about the motherboard inside can be modified by the configuration file.
+（5）、When there is a pause or power failure, the printing should be pre-extruded for a period of time. Otherwise, there may be a shortage of material and a fault. The extrusion length can be set in the configuration document.
+（6）、Add two in one out function, configurable.
+（7）、Increase the screen flip 180 degrees in the configuration file (bootloader can be flipped).
+（8）、Add wifi scan list function, configurable.
+（9）、After the printing is completed, a dialog box will pop up to show that the printing has been completed. How long does it take? There are "OK" and "Reprint once" buttons.
+（10）、Compatible with 3D_TOUCH function.
+（11）、Increase screen wake-up function, configurable.
+（12）、Modify the bootloader, fix the failure to use the TB67S109 driver PWC shutdown.
+（13）、Open pulse hold time parameter.
+（14）、Fixed the problem that when using 3Dtouch to do automatic leveling, the power failure will continue to print.
+（15）、Fix bug:When the material detection is triggered by a low level, after the material is cut off, the paper will resume printing after the material is not in use, and the printing will be stopped after a period of time, without prompting to install the consumables first.
+（16）、Fix bug:Set to two in and one out, the extrusion head is selected as the extrusion head 2 at the extrusion interface, and then preheated at the preheating interface, the preheating temperature cannot be set.
+（17）、Fix bug:Remove the break detection switch setting in the switch type setting.
+（18）、After the sleep mode is enabled, the preview model image in the print interface after hibernation is not displayed;
+（19）、After the MKS PWC module is connected, the delay is printed for 3 minutes and then turned off to prevent plugging (time configurable).
+（20）、Fix bug:When the z-axis returns to zero maximum (the first z-axis limit is connected to zmax), when the double z limit is enabled, the z2 limit is connected to the xmax interface.When z returns to zero, when the z1 limit is triggered, the two z axes will stop at the same time.
+（21）、Adding a pause position can be selected as an invalid item.
+（22）、Modify the file name to exceed 30 bytes, and stop the problem that the Z axis is going back to the zero direction.

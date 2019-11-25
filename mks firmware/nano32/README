@@ -1,0 +1,33 @@
+# Mks-Robin Nano
+Mks-Robin Nano Firmware version description
+
+Mks-Robin Nano V1.0.0
+
+     Initial version
+     
+1.Firmware options
+
+Mks-Robin Nano: Robin_nano.bin
+
+2.Mks-Robin Nano V1.0.0 function description
+
+  2.1.Control chip: 32-bit ARM
+  2.2.External WIFI module for cloud printing
+  2.3.Multi-language:Chinese;English;Russian;Spanish;French;Italian
+  2.4.Continue printing after power off
+  2.5.Dislay:TFT
+  
+Mks-Robin Nano V1.0.1
+  1.Fixed a bug that the target temperature became zero after change filament return during printing.
+  2.Fixed bug that steper driver of 8825 could not be used normally.
+  3.Added configuration item for Inverting Stepper Enable Pins of XYZE axis.
+  
+2.V1.0.2 Modifications:
+ 2.1.Fix the bug that read Large capacity sd card data error sometimes.
+ 2.2.Fix bug with manual shutdown invalid.
+ 2.3.Fixed a problem in which the title bar displayed abnormally during printing.
+ 2.4.Fixed bug where external drive printing would be skewed.
+ 2.5.Fixed a bug where moving too fast when manually leveling.
+  
+3.Mks-Robin Nano V1.0.3 function description
+ 3.1.Support 3D_touch leveling function.
