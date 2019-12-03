@@ -1,9 +1,9 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
- * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@
 void GcodeSuite::M163() {
   const int mix_index = parser.intval('S');
   if (mix_index < MIXING_STEPPERS)
-    mixer.set_M163_collector(mix_index, MAX(parser.floatval('P'), 0.0));
+    mixer.set_collector(mix_index, parser.floatval('P'));
 }
 
 /**
@@ -53,10 +53,12 @@ void GcodeSuite::M164() {
   #else
     constexpr int tool_index = 0;
   #endif
-  if (WITHIN(tool_index, 0, MIXING_VIRTUAL_TOOLS - 1))
-    mixer.normalize(tool_index);
+  if (tool_index >= 0) {
+    if (tool_index < MIXING_VIRTUAL_TOOLS)
+      mixer.normalize(tool_index);
+  }
   else
-    mixer.normalize(mixer.get_current_v_tool());
+    mixer.normalize();
 }
 
 #if ENABLED(DIRECT_MIXING_IN_G1)
@@ -77,33 +79,20 @@ void GcodeSuite::M164() {
     // Get mixing parameters from the GCode
     // The total "must" be 1.0 (but it will be normalized)
     // If no mix factors are given, the old mix is preserved
-    const char mixing_codes[] = { 'A', 'B'
-      #if MIXING_STEPPERS > 2
-        , 'C'
-        #if MIXING_STEPPERS > 3
-          , 'D'
-          #if MIXING_STEPPERS > 4
-            , 'H'
-            #if MIXING_STEPPERS > 5
-              , 'I'
-            #endif // MIXING_STEPPERS > 5
-          #endif // MIXING_STEPPERS > 4
-        #endif // MIXING_STEPPERS > 3
-      #endif // MIXING_STEPPERS > 2
-    };
+    const char mixing_codes[] = { LIST_N(MIXING_STEPPERS, 'A', 'B', 'C', 'D', 'H', 'I') };
     uint8_t mix_bits = 0;
     MIXER_STEPPER_LOOP(i) {
       if (parser.seenval(mixing_codes[i])) {
         SBI(mix_bits, i);
-        mixer.set_M163_collector(i, MAX(parser.value_float(), 0.0f));
+        mixer.set_collector(i, parser.value_float());
       }
     }
     // If any mixing factors were included, clear the rest
     // If none were included, preserve the last mix
     if (mix_bits) {
       MIXER_STEPPER_LOOP(i)
-        if (!TEST(mix_bits, i)) mixer.set_M163_collector(i, 0.0f);
-      mixer.normalize(mixer.get_current_v_tool());
+        if (!TEST(mix_bits, i)) mixer.set_collector(i, 0.0f);
+      mixer.normalize();
     }
   }
 

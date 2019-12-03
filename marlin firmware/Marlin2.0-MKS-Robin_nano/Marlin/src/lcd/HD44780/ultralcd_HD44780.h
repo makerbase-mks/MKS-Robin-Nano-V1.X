@@ -1,9 +1,9 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
- * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,10 +80,18 @@
 #elif ENABLED(SR_LCD_2W_NL)
   // 2 wire Non-latching LCD SR from:
   // https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/schematics#!shiftregister-connection
-  extern "C" void __cxa_pure_virtual() { while (1); }
+//  extern "C" void __cxa_pure_virtual() { while (1); }
   #include <LCD.h>
   #include <LiquidCrystal_SR.h>
   #define LCD_CLASS LiquidCrystal_SR
+#elif ENABLED(SR_LCD_3W_NL)
+
+//NewLiquidCrystal was not working for me, but this worked first try
+//https://github.com/mikeshub/SailfishLCD
+//uses the code directly from Sailfish
+
+  #include <SailfishLCD.h>
+  #define LCD_CLASS LiquidCrystalSerial
 
 #elif ENABLED(LCM1602)
   #include <Wire.h>

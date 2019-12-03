@@ -1,9 +1,9 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
- * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 /**
  * Arduino Sd2Card Library
- * Copyright (C) 2009 by William Greiman
+ * Copyright (c) 2009 by William Greiman
  * Updated with backports of the latest SdFat library from the same author
  *
  * This file is part of the Arduino Sd2Card Library
@@ -30,7 +30,7 @@
 
 #include "../inc/MarlinConfig.h"
 
-#if ENABLED(SDSUPPORT) && DISABLED(USB_FLASH_DRIVE_SUPPORT) && DISABLED(SDIO_SUPPORT)
+#if ENABLED(SDSUPPORT) && NONE(USB_FLASH_DRIVE_SUPPORT, SDIO_SUPPORT)
 
 /* Enable FAST CRC computations - You can trade speed for FLASH space if
  * needed by disabling the following define */
@@ -156,13 +156,13 @@ uint32_t Sd2Card::cardSize() {
 }
 
 void Sd2Card::chipDeselect() {
-  digitalWrite(chipSelectPin_, HIGH);
+  extDigitalWrite(chipSelectPin_, HIGH);
   spiSend(0xFF); // Ensure MISO goes high impedance
 }
 
 void Sd2Card::chipSelect() {
   spiInit(spiRate_);
-  digitalWrite(chipSelectPin_, LOW);
+  extDigitalWrite(chipSelectPin_, LOW);
 }
 
 /**
@@ -227,22 +227,18 @@ bool Sd2Card::eraseSingleBlockEnable() {
  * \return true for success, false for failure.
  * The reason for failure can be determined by calling errorCode() and errorData().
  */
-bool Sd2Card::init(const uint8_t sckRateID/*=0*/, const pin_t chipSelectPin/*=SD_CHIP_SELECT_PIN*/) {
+bool Sd2Card::init(const uint8_t sckRateID, const pin_t chipSelectPin) {
   errorCode_ = type_ = 0;
   chipSelectPin_ = chipSelectPin;
   // 16-bit init start time allows over a minute
   const millis_t init_timeout = millis() + SD_INIT_TIMEOUT;
   uint32_t arg;
 
-  // If init takes more than 4s it could trigger
-  // watchdog leading to a reboot loop.
-  #if ENABLED(USE_WATCHDOG)
-    watchdog_reset();
-  #endif
+  watchdog_refresh(); // In case init takes too long
 
   // Set pin modes
-  digitalWrite(chipSelectPin_, HIGH);  // For some CPUs pinMode can write the wrong data so init desired data value first
-  pinMode(chipSelectPin_, OUTPUT);     // Solution for #8746 by @benlye
+  extDigitalWrite(chipSelectPin_, HIGH);  // For some CPUs pinMode can write the wrong data so init desired data value first
+  pinMode(chipSelectPin_, OUTPUT);        // Solution for #8746 by @benlye
   spiBegin();
 
   // Set SCK rate for initialization commands
@@ -252,10 +248,7 @@ bool Sd2Card::init(const uint8_t sckRateID/*=0*/, const pin_t chipSelectPin/*=SD
   // Must supply min of 74 clock cycles with CS high.
   for (uint8_t i = 0; i < 10; i++) spiSend(0xFF);
 
-  // Initialization can cause the watchdog to timeout, so reinit it here
-  #if ENABLED(USE_WATCHDOG)
-    watchdog_reset();
-  #endif
+  watchdog_refresh(); // In case init takes too long
 
   // Command to go idle in SPI mode
   while ((status_ = cardCommand(CMD0, 0)) != R1_IDLE_STATE) {
@@ -269,10 +262,7 @@ bool Sd2Card::init(const uint8_t sckRateID/*=0*/, const pin_t chipSelectPin/*=SD
     crcSupported = (cardCommand(CMD59, 1) == R1_IDLE_STATE);
   #endif
 
-  // Initialization can cause the watchdog to timeout, so reinit it here
-  #if ENABLED(USE_WATCHDOG)
-    watchdog_reset();
-  #endif
+  watchdog_refresh(); // In case init takes too long
 
   // check SD version
   for (;;) {
@@ -294,10 +284,7 @@ bool Sd2Card::init(const uint8_t sckRateID/*=0*/, const pin_t chipSelectPin/*=SD
     }
   }
 
-  // Initialization can cause the watchdog to timeout, so reinit it here
-  #if ENABLED(USE_WATCHDOG)
-    watchdog_reset();
-  #endif
+  watchdog_refresh(); // In case init takes too long
 
   // Initialize card and send host supports SDHC if SD2
   arg = type() == SD_CARD_TYPE_SD2 ? 0x40000000 : 0;
@@ -339,7 +326,7 @@ bool Sd2Card::readBlock(uint32_t blockNumber, uint8_t* dst) {
 
   #if ENABLED(SD_CHECK_AND_RETRY)
     uint8_t retryCnt = 3;
-    for(;;) {
+    for (;;) {
       if (cardCommand(CMD17, blockNumber))
         error(SD_CARD_ERROR_CMD17);
       else if (readData(dst, 512))
@@ -525,10 +512,7 @@ bool Sd2Card::readStop() {
  */
 bool Sd2Card::setSckRate(const uint8_t sckRateID) {
   const bool success = (sckRateID <= 6);
-  if (success) 
-    spiRate_ = sckRateID;
-  else
-    error(SD_CARD_ERROR_SCK_RATE);
+  if (success) spiRate_ = sckRateID; else error(SD_CARD_ERROR_SCK_RATE);
   return success;
 }
 
@@ -539,9 +523,7 @@ bool Sd2Card::setSckRate(const uint8_t sckRateID) {
  */
 bool Sd2Card::waitNotBusy(const millis_t timeout_ms) {
   const millis_t wait_timeout = millis() + timeout_ms;
-  while (spiRec() != 0xFF)
-    if (ELAPSED(millis(), wait_timeout)) return false;
-
+  while (spiRec() != 0xFF) if (ELAPSED(millis(), wait_timeout)) return false;
   return true;
 }
 

@@ -1,9 +1,9 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (C) 2016, 2017 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
- * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,427 +57,492 @@
 
 #include "../../inc/MarlinConfig.h"
 
-#if HAS_GRAPHICAL_LCD
+#if HAS_GRAPHICAL_LCD && PIN_EXISTS(FSMC_CS)
 
-#include "U8glib.h"
 #include "HAL_LCD_com_defines.h"
-#include "string.h"
+#include "ultralcd_DOGM.h"
 
-#include "../../lcd/ultralcd.h"
-#if HAS_COLOR_LEDS && ENABLED(PRINTER_EVENT_LEDS)
-#include "../../feature/leds/leds.h"
+#include <string.h>
+
+#if ENABLED(LCD_USE_DMA_FSMC)
+  extern void LCD_IO_WriteSequence(uint16_t *data, uint16_t length);
+  extern void LCD_IO_WriteSequence_Async(uint16_t *data, uint16_t length);
+  extern void LCD_IO_WaitSequence_Async();
+  extern void LCD_IO_WriteMultiple(uint16_t color, uint32_t count);
 #endif
 
-struct LCD_IO {
-  uint32_t id;
-  void (*writeRegister)(uint16_t reg);
-  uint16_t (*readData)(void);
-  void (*writeData)(uint16_t data);
-  void (*writeMultiple)(uint16_t data, uint32_t count);
-  void (*writeSequence)(uint16_t *data, uint16_t length);
-  void (*setWindow)(uint16_t Xmin, uint16_t Ymin, uint16_t Xmax, uint16_t Ymax);
-};
-static LCD_IO lcd = {0, NULL, NULL, NULL, NULL, NULL, NULL};
-
-#define WIDTH 128
-#define HEIGHT 64
+#define WIDTH LCD_PIXEL_WIDTH
+#define HEIGHT LCD_PIXEL_HEIGHT
 #define PAGE_HEIGHT 8
-#if ENABLED(MKS_ROBIN_TFT35)
-#define X_MIN (32+80)
-#define Y_MIN (28+40)
-#define X_MAX (X_MIN + 2 * WIDTH  - 1)
-#define Y_MAX (Y_MIN + 2 * HEIGHT - 1)
-#else
-#define X_MIN 32
-#define Y_MIN 28
-#define X_MAX (X_MIN + 2 * WIDTH  - 1)
-#define Y_MAX (Y_MIN + 2 * HEIGHT - 1)
+
+#define X_LO LCD_PIXEL_OFFSET_X
+#define Y_LO LCD_PIXEL_OFFSET_Y
+#define X_HI (X_LO + 2 * WIDTH  - 1)
+#define Y_HI (Y_LO + 2 * HEIGHT - 1)
+
+#define LCD_COLUMN      0x2A   /* Colomn address register */
+#define LCD_ROW         0x2B   /* Row address register */
+#define LCD_WRITE_RAM   0x2C
+
+// see https://ee-programming-notepad.blogspot.com/2016/10/16-bit-color-generator-picker.html
+
+#define COLOR_BLACK       0x0000  // #000000
+#define COLOR_WHITE       0xFFFF  // #FFFFFF
+#define COLOR_SILVER      0xC618  // #C0C0C0
+#define COLOR_GREY        0x7BEF  // #808080
+#define COLOR_DARKGREY    0x4208  // #404040
+#define COLOR_DARKGREY2   0x39E7  // #303030
+#define COLOR_DARK        0x0003  // Some dark color
+
+#define COLOR_RED         0xF800  // #FF0000
+#define COLOR_LIME        0x7E00  // #00FF00
+#define COLOR_BLUE        0x001F  // #0000FF
+#define COLOR_YELLOW      0xFFE0  // #FFFF00
+#define COLOR_MAGENTA     0xF81F  // #FF00FF
+#define COLOR_FUCHSIA     0xF81F  // #FF00FF
+#define COLOR_CYAN        0x07FF  // #00FFFF
+#define COLOR_AQUA        0x07FF  // #00FFFF
+
+#define COLOR_MAROON      0x7800  // #800000
+#define COLOR_GREEN       0x03E0  // #008000
+#define COLOR_NAVY        0x000F  // #000080
+#define COLOR_OLIVE       0x8400  // #808000
+#define COLOR_PURPLE      0x8010  // #800080
+#define COLOR_TEAL        0x0410  // #008080
+
+#define COLOR_ORANGE      0xFC00  // #FF7F00
+
+#ifndef TFT_MARLINUI_COLOR
+  #define TFT_MARLINUI_COLOR COLOR_WHITE
 #endif
+#ifndef TFT_MARLINBG_COLOR
+  #define TFT_MARLINBG_COLOR COLOR_BLACK
+#endif
+#ifndef TFT_DISABLED_COLOR
+  #define TFT_DISABLED_COLOR COLOR_DARK
+#endif
+#ifndef TFT_BTCANCEL_COLOR
+  #define TFT_BTCANCEL_COLOR COLOR_RED
+#endif
+#ifndef TFT_BTARROWS_COLOR
+  #define TFT_BTARROWS_COLOR COLOR_BLUE
+#endif
+#ifndef TFT_BTOKMENU_COLOR
+  #define TFT_BTOKMENU_COLOR COLOR_RED
+#endif
+
 static uint32_t lcd_id = 0;
-uint16_t color = 0xFFFF;
 
-#define ESC_REG(x)      0xFFFF, 0x00FF & (uint16_t)x
-#define ESC_DELAY(x)    0xFFFF, 0x8000 | (x & 0x7FFF)
-#define ESC_END         0xFFFF, 0x7FFF
-#define ESC_FFFF        0xFFFF, 0xFFFF
+#define U8G_ESC_DATA(x) (uint8_t)(x >> 8), (uint8_t)(x & 0xFF)
 
-void writeEscSequence(const uint16_t *sequence) {
-  uint16_t data;
-  for (;;) {
-    data = *sequence++;
-    if (data != 0xFFFF) {
-      lcd.writeData(data);
-      continue;
-    }
-    data = *sequence++;
-    if (data == 0x7FFF) return;
-    if (data == 0xFFFF) {
-      lcd.writeData(data);
-    } else if (data & 0x8000) {
-      delay(data & 0x7FFF);
-    } else if ((data & 0xFF00) == 0) {
-      lcd.writeRegister(data);
-    }
-  }
-}
-
-static const uint16_t st7789v_init[] = {
-  ESC_REG(0x10), ESC_DELAY(10), ESC_REG(0x01), ESC_DELAY(200), ESC_REG(0x11), ESC_DELAY(120),
-  ESC_REG(0x36), 0x00A0,
-  ESC_REG(0x3A), 0x0055,
-  ESC_REG(0x2A), 0x0000, 0x0000, 0x0001, 0x003F,
-  ESC_REG(0x2B), 0x0000, 0x0000, 0x0000, 0x00EF,
-  ESC_REG(0xB2), 0x000C, 0x000C, 0x0000, 0x0033, 0x0033,
-  ESC_REG(0xB7), 0x0035,
-  ESC_REG(0xBB), 0x001F,
-  ESC_REG(0xC0), 0x002C,
-  ESC_REG(0xC2), 0x0001, 0x00C3,
-  ESC_REG(0xC4), 0x0020,
-  ESC_REG(0xC6), 0x000F,
-  ESC_REG(0xD0), 0x00A4, 0x00A1,
-  ESC_REG(0x29),
-  ESC_REG(0x11),
-  ESC_END
-};
-static const uint16_t ili9488_init[] = {
-  ESC_REG(0x10), ESC_DELAY(10), ESC_REG(0x01), ESC_DELAY(200), ESC_REG(0x11), ESC_DELAY(120),
-  ESC_REG(0x36), 0x0068,
-  ESC_REG(0x3A), 0x0055,
-  ESC_REG(0x2A), 0x0000, 0x0000, 0x0001, 0x00DF,
-  ESC_REG(0x2B), 0x0000, 0x0000, 0x0001, 0x003F,
-  ESC_REG(0xB0), 0x0000, 
-  ESC_REG(0xB1), 0x00B0, 0x0011, 
-  ESC_REG(0xB4), 0x0002, 
-  ESC_REG(0xB6), 0x0002, 0x0042,
-  ESC_REG(0xB7), 0x00C6,
-  ESC_REG(0xC0), 0x0010, 0x0010,
-  ESC_REG(0xC1), 0x0041,
-  ESC_REG(0xC5), 0x0000,0x0022,0x0080,
-  ESC_REG(0xD0), 0x00A4, 0x00A1,
-  ESC_REG(0x29),
-  ESC_REG(0x11),
-  ESC_END
-};
-static const uint16_t ili9328_init[] = {
-  ESC_REG(0x0001), 0x0100,
-  ESC_REG(0x0002), 0x0400,
-  ESC_REG(0x0003), 0x1038,
-  ESC_REG(0x0004), 0x0000,
-  ESC_REG(0x0008), 0x0202,
-  ESC_REG(0x0009), 0x0000,
-  ESC_REG(0x000A), 0x0000,
-  ESC_REG(0x000C), 0x0000,
-  ESC_REG(0x000D), 0x0000,
-  ESC_REG(0x000F), 0x0000,
-  ESC_REG(0x0010), 0x0000,
-  ESC_REG(0x0011), 0x0007,
-  ESC_REG(0x0012), 0x0000,
-  ESC_REG(0x0013), 0x0000,
-  ESC_REG(0x0007), 0x0001,
-  ESC_DELAY(200),
-  ESC_REG(0x0010), 0x1690,
-  ESC_REG(0x0011), 0x0227,
-  ESC_DELAY(50),
-  ESC_REG(0x0012), 0x008C,
-  ESC_DELAY(50),
-  ESC_REG(0x0013), 0x1500,
-  ESC_REG(0x0029), 0x0004,
-  ESC_REG(0x002B), 0x000D,
-  ESC_DELAY(50),
-  ESC_REG(0x0050), 0x0000,
-  ESC_REG(0x0051), 0x00EF,
-  ESC_REG(0x0052), 0x0000,
-  ESC_REG(0x0053), 0x013F,
-  ESC_REG(0x0020), 0x0000,
-  ESC_REG(0x0021), 0x0000,
-  ESC_REG(0x0060), 0x2700,
-  ESC_REG(0x0061), 0x0001,
-  ESC_REG(0x006A), 0x0000,
-  ESC_REG(0x0080), 0x0000,
-  ESC_REG(0x0081), 0x0000,
-  ESC_REG(0x0082), 0x0000,
-  ESC_REG(0x0083), 0x0000,
-  ESC_REG(0x0084), 0x0000,
-  ESC_REG(0x0085), 0x0000,
-  ESC_REG(0x0090), 0x0010,
-  ESC_REG(0x0092), 0x0600,
-  ESC_REG(0x0007), 0x0133,
-  ESC_REG(0x0022),
-  ESC_END
+static const uint8_t page_first_sequence[] = {
+  U8G_ESC_ADR(0), LCD_COLUMN, U8G_ESC_ADR(1), U8G_ESC_DATA(X_LO), U8G_ESC_DATA(X_HI),
+  U8G_ESC_ADR(0), LCD_ROW,    U8G_ESC_ADR(1), U8G_ESC_DATA(Y_LO), U8G_ESC_DATA(Y_HI),
+  U8G_ESC_ADR(0), LCD_WRITE_RAM, U8G_ESC_ADR(1),
+  U8G_ESC_END
 };
 
-static const uint8_t button0[] = {
-   B01111111,B11111111,B11111111,B11111111,B11111110,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00001000,B00000000,B00000001,
-   B10000000,B00000000,B00011100,B00000000,B00000001,
-   B10000000,B00000000,B00111110,B00000000,B00000001,
-   B10000000,B00000000,B01111111,B00000000,B00000001,
-   B10000000,B00000000,B11111111,B10000000,B00000001,
-   B10000000,B00000000,B00011100,B00000000,B00000001,
-   B10000000,B00000000,B00011100,B00000000,B00000001,
-   B10000000,B00000000,B00011100,B00000000,B00000001,
-   B10000000,B00000000,B00011100,B00000000,B00000001,
-   B10000000,B00000000,B00011100,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B01111111,B11111111,B11111111,B11111111,B11111110,
+static const uint8_t clear_screen_sequence[] = {
+  U8G_ESC_ADR(0), LCD_COLUMN, U8G_ESC_ADR(1), 0x00, 0x00, U8G_ESC_DATA(LCD_FULL_PIXEL_WIDTH),
+  U8G_ESC_ADR(0), LCD_ROW,    U8G_ESC_ADR(1), 0x00, 0x00, U8G_ESC_DATA(LCD_FULL_PIXEL_HEIGHT),
+  U8G_ESC_ADR(0), LCD_WRITE_RAM, U8G_ESC_ADR(1),
+  U8G_ESC_END
 };
 
-static const uint8_t button1[] = {
-   B01111111,B11111111,B11111111,B11111111,B11111110,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00011100,B00000000,B00000001,
-   B10000000,B00000000,B00011100,B00000000,B00000001,
-   B10000000,B00000000,B00011100,B00000000,B00000001,
-   B10000000,B00000000,B00011100,B00000000,B00000001,
-   B10000000,B00000000,B00011100,B00000000,B00000001,
-   B10000000,B00000000,B11111111,B10000000,B00000001,
-   B10000000,B00000000,B01111111,B00000000,B00000001,
-   B10000000,B00000000,B00111110,B00000000,B00000001,
-   B10000000,B00000000,B00011100,B00000000,B00000001,
-   B10000000,B00000000,B00001000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B01111111,B11111111,B11111111,B11111111,B11111110,
-};
+#if ENABLED(TOUCH_BUTTONS)
 
-static const uint8_t button2[] = {
-   B01111111,B11111111,B11111111,B11111111,B11111110,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B01000001,B11000000,B00000001,
-   B10000000,B00000000,B11000001,B11000000,B00000001,
-   B10000000,B00000001,B11111111,B11000000,B00000001,
-   B10000000,B00000011,B11111111,B11000000,B00000001,
-   B10000000,B00000001,B11111111,B11000000,B00000001,
-   B10000000,B00000000,B11000000,B00000000,B00000001,
-   B10000000,B00000000,B01000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B10000000,B00000000,B00000000,B00000000,B00000001,
-   B01111111,B11111111,B11111111,B11111111,B11111110,
-};
+  static const uint8_t separation_line_sequence_left[] = {
+    U8G_ESC_ADR(0), LCD_COLUMN, U8G_ESC_ADR(1), U8G_ESC_DATA(10), U8G_ESC_DATA(159),
+    U8G_ESC_ADR(0), LCD_ROW,    U8G_ESC_ADR(1), U8G_ESC_DATA(170), U8G_ESC_DATA(173),
+    U8G_ESC_ADR(0), LCD_WRITE_RAM, U8G_ESC_ADR(1),
+    U8G_ESC_END
+  };
 
-static void _setWindow_x20_x21_x22(uint16_t Xmin, uint16_t Ymin, uint16_t Xmax, uint16_t Ymax) {
-  lcd.writeRegister(0x50);
-  lcd.writeData(Ymin);
-  lcd.writeRegister(0x51);
-  lcd.writeData(Ymax);
-  lcd.writeRegister(0x52);
-  lcd.writeData(Xmin);
-  lcd.writeRegister(0x53);
-  lcd.writeData(Xmax);
+  static const uint8_t separation_line_sequence_right[] = {
+    U8G_ESC_ADR(0), LCD_COLUMN, U8G_ESC_ADR(1), U8G_ESC_DATA(160), U8G_ESC_DATA(309),
+    U8G_ESC_ADR(0), LCD_ROW,    U8G_ESC_ADR(1), U8G_ESC_DATA(170), U8G_ESC_DATA(173),
+    U8G_ESC_ADR(0), LCD_WRITE_RAM, U8G_ESC_ADR(1),
+    U8G_ESC_END
+  };
 
-  lcd.writeRegister(0x20);
-  lcd.writeData(Ymin);
-  lcd.writeRegister(0x21);
-  lcd.writeData(Xmin);
+  static const uint8_t buttonD_sequence[] = {
+    U8G_ESC_ADR(0), LCD_COLUMN, U8G_ESC_ADR(1), U8G_ESC_DATA(14), U8G_ESC_DATA(77),
+    U8G_ESC_ADR(0), LCD_ROW,    U8G_ESC_ADR(1), U8G_ESC_DATA(185), U8G_ESC_DATA(224),
+    U8G_ESC_ADR(0), LCD_WRITE_RAM, U8G_ESC_ADR(1),
+    U8G_ESC_END
+  };
 
-  lcd.writeRegister(0x22);
-}
+  static const uint8_t buttonA_sequence[] = {
+    U8G_ESC_ADR(0), LCD_COLUMN, U8G_ESC_ADR(1), U8G_ESC_DATA(90), U8G_ESC_DATA(153),
+    U8G_ESC_ADR(0), LCD_ROW,    U8G_ESC_ADR(1), U8G_ESC_DATA(185), U8G_ESC_DATA(224),
+    U8G_ESC_ADR(0), LCD_WRITE_RAM, U8G_ESC_ADR(1),
+    U8G_ESC_END
+  };
 
-static void _setWindow_x2a_x2b_x2c(uint16_t Xmin, uint16_t Ymin, uint16_t Xmax, uint16_t Ymax) {
-  lcd.writeRegister(0x2A);
-  lcd.writeData((Xmin >> 8) & 0xFF);
-  lcd.writeData(Xmin & 0xFF);
-  lcd.writeData((Xmax >> 8) & 0xFF);
-  lcd.writeData(Xmax & 0xFF);
+  static const uint8_t buttonB_sequence[] = {
+    U8G_ESC_ADR(0), LCD_COLUMN, U8G_ESC_ADR(1), U8G_ESC_DATA(166), U8G_ESC_DATA(229),
+    U8G_ESC_ADR(0), LCD_ROW,    U8G_ESC_ADR(1), U8G_ESC_DATA(185), U8G_ESC_DATA(224),
+    U8G_ESC_ADR(0), LCD_WRITE_RAM, U8G_ESC_ADR(1),
+    U8G_ESC_END
+  };
 
-  lcd.writeRegister(0x2B);
-  lcd.writeData((Ymin >> 8) & 0xFF);
-  lcd.writeData(Ymin & 0xFF);
-  lcd.writeData((Ymax >> 8) & 0xFF);
-  lcd.writeData(Ymax & 0xFF);
+  static const uint8_t buttonC_sequence[] = {
+    U8G_ESC_ADR(0), LCD_COLUMN, U8G_ESC_ADR(1), U8G_ESC_DATA(242), U8G_ESC_DATA(305),
+    U8G_ESC_ADR(0), LCD_ROW,    U8G_ESC_ADR(1), U8G_ESC_DATA(185), U8G_ESC_DATA(224),
+    U8G_ESC_ADR(0), LCD_WRITE_RAM, U8G_ESC_ADR(1),
+    U8G_ESC_END
+  };
 
-  lcd.writeRegister(0x2C);
-}
-
-void drawImage(const uint8_t *data, uint16_t length, uint16_t height) {
-  uint16_t i, j, k;
-  uint16_t buffer[160];
-
-  for (i = 0; i < height; i++) {
-    k = 0;
-    for (j = 0; j < length; j++) {
-      if (*(data + (i * (length >> 3) + (j >> 3))) & (128 >> (j & 7))) {
-        buffer[k++] = color;
-        buffer[k++] = color;
-      } else {
-        buffer[k++] = 0x0000;
-        buffer[k++] = 0x0000;
-      }
-    }
-    lcd.writeSequence(buffer, length << 1);
-    lcd.writeSequence(buffer, length << 1);
-  }
-}
-#if ENABLED(MKS_ROBIN_TFT35)
-void drawUI(void) {
-  lcd.setWindow(10+80, 170+40, 309+80, 171+40);
-  lcd.writeMultiple(color, 600);
-
-  lcd.setWindow( 20+80, 185+40,  99+80, 224+40);
-  drawImage(button0, 40, 20);
-  lcd.setWindow(120+80, 185+40, 199+80, 224+40);
-  drawImage(button1, 40, 20);
-  lcd.setWindow(220+80, 185+40, 299+80, 224+40);
-  drawImage(button2, 40, 20);
-}
-#else
-void drawUI(void) {
-  lcd.setWindow(10, 170, 309, 171);
-  lcd.writeMultiple(color, 600);
-
-  lcd.setWindow( 20, 185,  99, 224);
-  drawImage(button0, 40, 20);
-  lcd.setWindow(120, 185, 199, 224);
-  drawImage(button1, 40, 20);
-  lcd.setWindow(220, 185, 299, 224);
-  drawImage(button2, 40, 20);
-}
 #endif
+
+static const uint8_t st7789v_init_sequence[] = { // 0x8552 - ST7789V
+  U8G_ESC_ADR(0),
+  0x10,
+  U8G_ESC_DLY(10),
+  0x01,
+  U8G_ESC_DLY(100), U8G_ESC_DLY(100),
+  0x11,
+  U8G_ESC_DLY(120),
+  0x36, U8G_ESC_ADR(1), 0xA0,
+  U8G_ESC_ADR(0), 0x3A, U8G_ESC_ADR(1), 0x05,
+  U8G_ESC_ADR(0), LCD_COLUMN, U8G_ESC_ADR(1), 0x00, 0x00, 0x01, 0x3F,
+  U8G_ESC_ADR(0), LCD_ROW,    U8G_ESC_ADR(1), 0x00, 0x00, 0x00, 0xEF,
+  U8G_ESC_ADR(0), 0xB2, U8G_ESC_ADR(1), 0x0C, 0x0C, 0x00, 0x33, 0x33,
+  U8G_ESC_ADR(0), 0xB7, U8G_ESC_ADR(1), 0x35,
+  U8G_ESC_ADR(0), 0xBB, U8G_ESC_ADR(1), 0x1F,
+  U8G_ESC_ADR(0), 0xC0, U8G_ESC_ADR(1), 0x2C,
+  U8G_ESC_ADR(0), 0xC2, U8G_ESC_ADR(1), 0x01, 0xC3,
+  U8G_ESC_ADR(0), 0xC4, U8G_ESC_ADR(1), 0x20,
+  U8G_ESC_ADR(0), 0xC6, U8G_ESC_ADR(1), 0x0F,
+  U8G_ESC_ADR(0), 0xD0, U8G_ESC_ADR(1), 0xA4, 0xA1,
+  U8G_ESC_ADR(0), 0xE0, U8G_ESC_ADR(1), 0xD0, 0x08, 0x11, 0x08, 0x0C, 0x15, 0x39, 0x33, 0x50, 0x36, 0x13, 0x14, 0x29, 0x2D,
+  U8G_ESC_ADR(0), 0xE1, U8G_ESC_ADR(1), 0xD0, 0x08, 0x10, 0x08, 0x06, 0x06, 0x39, 0x44, 0x51, 0x0B, 0x16, 0x14, 0x2F, 0x31,
+  U8G_ESC_ADR(0), 0x29, 0x11, 0x35, U8G_ESC_ADR(1), 0x00,
+  U8G_ESC_END
+};
+
+static const uint8_t ili9341_init_sequence[] = { // 0x9341 - ILI9341
+  U8G_ESC_ADR(0),
+  0x10,
+  U8G_ESC_DLY(10),
+  0x01,
+  U8G_ESC_DLY(100), U8G_ESC_DLY(100),
+  0x36, U8G_ESC_ADR(1), 0xE8,
+  U8G_ESC_ADR(0), 0x3A, U8G_ESC_ADR(1), 0x55,
+  U8G_ESC_ADR(0), LCD_COLUMN, U8G_ESC_ADR(1), 0x00, 0x00, 0x01, 0x3F,
+  U8G_ESC_ADR(0), LCD_ROW,    U8G_ESC_ADR(1), 0x00, 0x00, 0x00, 0xEF,
+  U8G_ESC_ADR(0), 0xC5, U8G_ESC_ADR(1), 0x3E, 0x28,
+  U8G_ESC_ADR(0), 0xC7, U8G_ESC_ADR(1), 0x86,
+  U8G_ESC_ADR(0), 0xB1, U8G_ESC_ADR(1), 0x00, 0x18,
+  U8G_ESC_ADR(0), 0xC0, U8G_ESC_ADR(1), 0x23,
+  U8G_ESC_ADR(0), 0xC1, U8G_ESC_ADR(1), 0x10,
+  U8G_ESC_ADR(0), 0x29,
+  U8G_ESC_ADR(0), 0x11,
+  U8G_ESC_DLY(100),
+  U8G_ESC_END
+};
+
+#if ENABLED(TOUCH_BUTTONS)
+
+  static const uint8_t buttonD[] = {
+    B01111111,B11111111,B11111111,B11111110,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00011000,B00110000,B00000001,
+    B10000000,B00001100,B01100000,B00000001,
+    B10000000,B00000110,B11000000,B00000001,
+    B10000000,B00000011,B10000000,B00000001,
+    B10000000,B00000011,B10000000,B00000001,
+    B10000000,B00000110,B11000000,B00000001,
+    B10000000,B00001100,B01100000,B00000001,
+    B10000000,B00011000,B00110000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B01111111,B11111111,B11111111,B11111110,
+  };
+
+  #if ENABLED(REVERSE_MENU_DIRECTION)
+
+    static const uint8_t buttonA[] = {
+      B01111111,B11111111,B11111111,B11111110,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B11100000,B00000000,B00000001,
+      B10000000,B11100000,B00000000,B00000001,
+      B10000000,B11100000,B00000000,B00000001,
+      B10000000,B11100000,B00000000,B00000001,
+      B10000000,B11100000,B00111111,B11100001,
+      B10000111,B11111100,B00111111,B11100001,
+      B10000011,B11111000,B00000000,B00000001,
+      B10000001,B11110000,B00000000,B00000001,
+      B10000000,B11100000,B00000000,B00000001,
+      B10000000,B01000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B01111111,B11111111,B11111111,B11111110,
+    };
+    static const uint8_t buttonB[] = {
+      B01111111,B11111111,B11111111,B11111110,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B01100000,B00000010,B00000001,
+      B10000000,B01100000,B00000111,B00000001,
+      B10000000,B01100000,B00001111,B10000001,
+      B10000000,B01100000,B00011111,B11000001,
+      B10000111,B11111110,B00111111,B11100001,
+      B10000111,B11111110,B00000111,B00000001,
+      B10000000,B01100000,B00000111,B00000001,
+      B10000000,B01100000,B00000111,B00000001,
+      B10000000,B01100000,B00000111,B00000001,
+      B10000000,B01100000,B00000111,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B01111111,B11111111,B11111111,B11111110,
+    };
+
+  #else
+
+    static const uint8_t buttonA[] = {
+      B01111111,B11111111,B11111111,B11111110,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B01000000,B00000000,B00000001,
+      B10000000,B11100000,B00000000,B00000001,
+      B10000001,B11110000,B00000000,B00000001,
+      B10000011,B11111000,B00000000,B00000001,
+      B10000111,B11111100,B00111111,B11100001,
+      B10000000,B11100000,B00111111,B11100001,
+      B10000000,B11100000,B00000000,B00000001,
+      B10000000,B11100000,B00000000,B00000001,
+      B10000000,B11100000,B00000000,B00000001,
+      B10000000,B11100000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B01111111,B11111111,B11111111,B11111110,
+    };
+
+    static const uint8_t buttonB[] = {
+      B01111111,B11111111,B11111111,B11111110,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B01100000,B00000111,B00000001,
+      B10000000,B01100000,B00000111,B00000001,
+      B10000000,B01100000,B00000111,B00000001,
+      B10000000,B01100000,B00000111,B00000001,
+      B10000111,B11111110,B00000111,B00000001,
+      B10000111,B11111110,B00111111,B11100001,
+      B10000000,B01100000,B00011111,B11000001,
+      B10000000,B01100000,B00001111,B10000001,
+      B10000000,B01100000,B00000111,B00000001,
+      B10000000,B01100000,B00000010,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B10000000,B00000000,B00000000,B00000001,
+      B01111111,B11111111,B11111111,B11111110,
+    };
+
+  #endif
+
+  static const uint8_t buttonC[] = {
+    B01111111,B11111111,B11111111,B11111110,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00011100,B00000001,
+    B10000000,B00000100,B00011100,B00000001,
+    B10000000,B00001100,B00011100,B00000001,
+    B10000000,B00011111,B11111100,B00000001,
+    B10000000,B00111111,B11111100,B00000001,
+    B10000000,B00011111,B11111100,B00000001,
+    B10000000,B00001100,B00000000,B00000001,
+    B10000000,B00000100,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B10000000,B00000000,B00000000,B00000001,
+    B01111111,B11111111,B11111111,B11111110,
+  };
+
+  void drawImage(const uint8_t *data, u8g_t *u8g, u8g_dev_t *dev, uint16_t length, uint16_t height, uint16_t color) {
+    uint16_t buffer[128];
+
+    for (uint16_t i = 0; i < height; i++) {
+      uint16_t k = 0;
+      for (uint16_t j = 0; j < length; j++) {
+        uint16_t v = TFT_MARLINBG_COLOR;
+        if (*(data + (i * (length >> 3) + (j >> 3))) & (0x80 >> (j & 7)))
+          v = color;
+        else
+          v = TFT_MARLINBG_COLOR;
+        buffer[k++] = v; buffer[k++] = v;
+      }
+      #ifdef LCD_USE_DMA_FSMC
+        if (k <= 80) { // generally is... for our buttons
+          memcpy(&buffer[k], &buffer[0], k * sizeof(uint16_t));
+          LCD_IO_WriteSequence(buffer, k * sizeof(uint16_t));
+        }
+        else {
+          LCD_IO_WriteSequence(buffer, k);
+          LCD_IO_WriteSequence(buffer, k);
+        }
+      #else
+        u8g_WriteSequence(u8g, dev, k << 1, (uint8_t *)buffer);
+        u8g_WriteSequence(u8g, dev, k << 1, (uint8_t *)buffer);
+      #endif
+    }
+  }
+
+#endif // TOUCH_BUTTONS
+
+// Used to fill RGB565 (16bits) background
+inline void memset2(const void *ptr, uint16_t fill, size_t cnt) {
+  uint16_t* wptr = (uint16_t*)ptr;
+  for (size_t i = 0; i < cnt; i += 2) { *wptr = fill; wptr++; }
+}
+
+static bool preinit = true;
+static uint8_t page;
 
 uint8_t u8g_dev_tft_320x240_upscale_from_128x64_fn(u8g_t *u8g, u8g_dev_t *dev, uint8_t msg, void *arg) {
-#if HAS_COLOR_LEDS && ENABLED(PRINTER_EVENT_LEDS)
-  uint16_t newColor;
-#endif
   u8g_pb_t *pb = (u8g_pb_t *)(dev->dev_mem);
-  uint16_t buffer[256];
-  uint32_t i, j, k;
-  uint8_t byte;
-
-  uint16_t reg00;
-
-  switch(msg) {
+  #ifdef LCD_USE_DMA_FSMC
+    static uint16_t bufferA[512], bufferB[512];
+    uint16_t* buffer = &bufferA[0];
+    bool allow_async = true;
+  #else
+    uint16_t buffer[WIDTH*2]; // 16-bit RGB 565 pixel line buffer
+  #endif
+  switch (msg) {
     case U8G_DEV_MSG_INIT:
-      dev->com_fn(u8g, U8G_COM_MSG_INIT, U8G_SPI_CLK_CYCLE_NONE, &lcd);
-      if (lcd.writeRegister == NULL || lcd.writeData == NULL || lcd.readData == NULL || lcd.writeSequence == NULL) break;
+      dev->com_fn(u8g, U8G_COM_MSG_INIT, U8G_SPI_CLK_CYCLE_NONE, &lcd_id);
+      if (lcd_id == 0x040404) return 0; // No connected display on FSMC
+      if (lcd_id == 0xFFFFFF) return 0; // No connected display on SPI
 
-//    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//    !!! POC implementation. NOT compatible with 8-bit interface (SPI / FSMC 8-bit) !!!
-//    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      if ((lcd_id & 0xFFFF) == 0x8552)  // ST7789V
+        u8g_WriteEscSeqP(u8g, dev, st7789v_init_sequence);
+      if ((lcd_id & 0xFFFF) == 0x9341)  // ILI9341
+        u8g_WriteEscSeqP(u8g, dev, ili9341_init_sequence);
 
-      lcd.writeRegister(0x0000);
-      reg00 = lcd.readData();
-      if (reg00 == 0 || reg00 == 0xFFFF) {
-        lcd.writeRegister(0x0004);
-        lcd.readData(); // dummy read
-        lcd.id = ((uint32_t)(lcd.readData() & 0xff) << 16) | ((uint32_t)(lcd.readData() & 0xff) << 8) | (uint32_t)(lcd.readData() & 0xff);
-        #if ENABLED(MKS_ROBIN_TFT35)
-        if(lcd.id != 0x8552)
-        {
-            lcd.writeRegister(0x00d3);
-            lcd.readData(); // dummy read
-            lcd.id = ((uint32_t)(lcd.readData() & 0xff) << 16) | ((uint32_t)(lcd.readData() & 0xff) << 8) | (uint32_t)(lcd.readData() & 0xff);
-        }
-        #endif
-        if (lcd_id == 0x040404) { // No connected display on FSMC
-          lcd.id = 0;
-          return 0;
-        }
-      } else {
-        lcd.id = (uint32_t)reg00;
+      if (preinit) {
+        preinit = false;
+        return u8g_dev_pb8v1_base_fn(u8g, dev, msg, arg);
       }
 
-      switch(lcd.id & 0xFFFF) {
-        case 0x8552:   // ST7789V
-          writeEscSequence(st7789v_init);
-          lcd.setWindow = _setWindow_x2a_x2b_x2c;
-          break;
-        case 0x9328:  // ILI9328
-          writeEscSequence(ili9328_init);
-          lcd.setWindow = _setWindow_x20_x21_x22;
-          break;
-        #if ENABLED(MKS_ROBIN_TFT35)
-        case 0x9488:
-          writeEscSequence(ili9488_init);
-          lcd.setWindow = _setWindow_x2a_x2b_x2c;            
-          break;
-          #endif
-        case 0x0404:  // No connected display on FSMC
-          lcd.id = 0;
-          return 0;
-        case 0xFFFF:  // No connected display on SPI
-          lcd.id = 0;
-          return 0;
-        default:
-          if (reg00 == 0)
-            lcd.setWindow = _setWindow_x2a_x2b_x2c;
-          else
-            lcd.setWindow = _setWindow_x20_x21_x22;
-          break;
-      }
-      #if ENABLED(MKS_ROBIN_TFT35)
-       if(lcd.id==0x9488)
-       {
-            lcd.setWindow(0,0,479,319);
-            lcd.writeMultiple(0x0000, 480 * 320);       
-       }
-       else
-        #endif
-       {
-            lcd.setWindow(0,0,319,239);
-            lcd.writeMultiple(0x0000, 320 * 240);
-       }
-      drawUI();
-      break;
+      // Clear Screen Sequence
+      u8g_WriteEscSeqP(u8g, dev, clear_screen_sequence);
+      #ifdef LCD_USE_DMA_FSMC
+        LCD_IO_WriteMultiple(TFT_MARLINBG_COLOR, (320*240));
+      #else
+        memset2(buffer, TFT_MARLINBG_COLOR, 160);
+        for (uint16_t i = 0; i < 960; i++)
+          u8g_WriteSequence(u8g, dev, 160, (uint8_t *)buffer);
+      #endif
 
-    case U8G_DEV_MSG_STOP:
-      break;
+      // bottom line and buttons
+      #if ENABLED(TOUCH_BUTTONS)
+
+        #ifdef LCD_USE_DMA_FSMC
+          u8g_WriteEscSeqP(u8g, dev, separation_line_sequence_left);
+          LCD_IO_WriteMultiple(TFT_DISABLED_COLOR, 300);
+          u8g_WriteEscSeqP(u8g, dev, separation_line_sequence_right);
+          LCD_IO_WriteMultiple(TFT_DISABLED_COLOR, 300);
+        #else
+          memset2(buffer, TFT_DISABLED_COLOR, 150);
+          u8g_WriteEscSeqP(u8g, dev, separation_line_sequence_left);
+          for (uint8_t i = 4; i--;)
+            u8g_WriteSequence(u8g, dev, 150, (uint8_t *)buffer);
+          u8g_WriteEscSeqP(u8g, dev, separation_line_sequence_right);
+          for (uint8_t i = 4; i--;)
+            u8g_WriteSequence(u8g, dev, 150, (uint8_t *)buffer);
+        #endif
+
+        u8g_WriteEscSeqP(u8g, dev, buttonD_sequence);
+        drawImage(buttonD, u8g, dev, 32, 20, TFT_BTCANCEL_COLOR);
+
+        u8g_WriteEscSeqP(u8g, dev, buttonA_sequence);
+        drawImage(buttonA, u8g, dev, 32, 20, TFT_BTARROWS_COLOR);
+
+        u8g_WriteEscSeqP(u8g, dev, buttonB_sequence);
+        drawImage(buttonB, u8g, dev, 32, 20, TFT_BTARROWS_COLOR);
+
+        u8g_WriteEscSeqP(u8g, dev, buttonC_sequence);
+        drawImage(buttonC, u8g, dev, 32, 20, TFT_BTOKMENU_COLOR);
+      #endif // TOUCH_BUTTONS
+
+      return 0;
+
+    case U8G_DEV_MSG_STOP: preinit = true; break;
 
     case U8G_DEV_MSG_PAGE_FIRST:
-      if (lcd.id == 0) break;
-
-#if HAS_COLOR_LEDS && ENABLED(PRINTER_EVENT_LEDS)
-      newColor = (0xF800 & (((uint16_t)leds.color.r) << 8)) | (0x07E0 & (((uint16_t)leds.color.g) << 3)) | (0x001F & (((uint16_t)leds.color.b) >> 3));
-      if ((newColor != 0) && (newColor != color)) {
-        color = newColor;
-        drawUI();
-      }
-#endif
-      lcd.setWindow(X_MIN,Y_MIN,X_MAX,Y_MAX);
+      page = 0;
+      u8g_WriteEscSeqP(u8g, dev, page_first_sequence);
       break;
 
     case U8G_DEV_MSG_PAGE_NEXT:
-      if (lcd.id == 0) break;
+      if (++page > (HEIGHT / PAGE_HEIGHT)) return 1;
 
-      for (j = 0; j < 8;  j++) {
-        k = 0;
-        for (i = 0; i < (uint32_t) pb->width;  i++) {
-          byte = *(((uint8_t *)pb->buf) + i);
-          if (byte & (1 << j)) {
-            buffer[k++] = color;
-            buffer[k++] = color;
-          } else {
-            buffer[k++] = 0x0000;
-            buffer[k++] = 0x0000;
-          }
+      for (uint8_t y = 0; y < PAGE_HEIGHT; y++) {
+        uint32_t k = 0;
+        #ifdef LCD_USE_DMA_FSMC
+          buffer = (y & 1) ? bufferB : bufferA;
+        #endif
+        for (uint16_t i = 0; i < (uint32_t)pb->width; i++) {
+          const uint8_t b = *(((uint8_t *)pb->buf) + i);
+          const uint16_t c = TEST(b, y) ? TFT_MARLINUI_COLOR : TFT_MARLINBG_COLOR;
+          buffer[k++] = c; buffer[k++] = c;
         }
-        for (k = 0; k < 2; k++) lcd.writeSequence(buffer, 256);
+        #ifdef LCD_USE_DMA_FSMC
+          memcpy(&buffer[256], &buffer[0], 512);
+          if (allow_async) {
+            if (y > 0 || page > 1) LCD_IO_WaitSequence_Async();
+            if (y == 7 && page == 8)
+              LCD_IO_WriteSequence(buffer, 512); // last line of last page
+            else
+              LCD_IO_WriteSequence_Async(buffer, 512);
+          }
+          else
+            LCD_IO_WriteSequence(buffer, 512);
+        #else
+          uint8_t* bufptr = (uint8_t*) buffer;
+          for (uint8_t i = 2; i--;) {
+            u8g_WriteSequence(u8g, dev, WIDTH, &bufptr[0]);
+            u8g_WriteSequence(u8g, dev, WIDTH, &bufptr[WIDTH]);
+            u8g_WriteSequence(u8g, dev, WIDTH, &bufptr[WIDTH*2]);
+            u8g_WriteSequence(u8g, dev, WIDTH, &bufptr[WIDTH*3]);
+          }
+        #endif
       }
       break;
 
     case U8G_DEV_MSG_SLEEP_ON:
+      // Enter Sleep Mode (10h)
       return 1;
-
     case U8G_DEV_MSG_SLEEP_OFF:
+      // Sleep Out (11h)
       return 1;
   }
   return u8g_dev_pb8v1_base_fn(u8g, dev, msg, arg);
@@ -485,4 +550,4 @@ uint8_t u8g_dev_tft_320x240_upscale_from_128x64_fn(u8g_t *u8g, u8g_dev_t *dev, u
 
 U8G_PB_DEV(u8g_dev_tft_320x240_upscale_from_128x64, WIDTH, HEIGHT, PAGE_HEIGHT, u8g_dev_tft_320x240_upscale_from_128x64_fn, U8G_COM_HAL_FSMC_FN);
 
-#endif // HAS_GRAPHICAL_LCD
+#endif // HAS_GRAPHICAL_LCD && FSMC_CS

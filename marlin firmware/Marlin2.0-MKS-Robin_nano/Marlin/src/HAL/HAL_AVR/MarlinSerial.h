@@ -1,9 +1,9 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
- * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -205,18 +205,18 @@
     public:
 
     FORCE_INLINE static void store_rxd_char();
-    FORCE_INLINE static void _tx_udr_empty_irq(void);
+    FORCE_INLINE static void _tx_udr_empty_irq();
 
     public:
       MarlinSerial() {};
       static void begin(const long);
       static void end();
-      static int peek(void);
-      static int read(void);
-      static void flush(void);
-      static ring_buffer_pos_t available(void);
+      static int peek();
+      static int read();
+      static void flush();
+      static ring_buffer_pos_t available();
       static void write(const uint8_t c);
-      static void flushTX(void);
+      static void flushTX();
 
       FORCE_INLINE static uint8_t dropped() { return Cfg::DROPPED_RX ? rx_dropped_bytes : 0; }
       FORCE_INLINE static uint8_t buffer_overruns() { return Cfg::RX_OVERRUNS ? rx_buffer_overruns : 0; }
@@ -245,7 +245,7 @@
       static void println(long, int = DEC);
       static void println(unsigned long, int = DEC);
       static void println(double, int = 2);
-      static void println(void);
+      static void println();
       operator bool() { return true; }
 
     private:
@@ -274,6 +274,23 @@
   #endif
 
 #endif // !USBCON
+
+#ifdef INTERNAL_SERIAL_PORT
+  template <uint8_t serial>
+  struct MarlinInternalSerialCfg {
+    static constexpr int PORT               = serial;
+    static constexpr unsigned int RX_SIZE   = 32;
+    static constexpr unsigned int TX_SIZE   = 32;
+    static constexpr bool XONOFF            = false;
+    static constexpr bool EMERGENCYPARSER   = false;
+    static constexpr bool DROPPED_RX        = false;
+    static constexpr bool RX_OVERRUNS       = false;
+    static constexpr bool RX_FRAMING_ERRORS = false;
+    static constexpr bool MAX_RX_QUEUED     = false;
+  };
+
+  extern MarlinSerial<MarlinInternalSerialCfg<INTERNAL_SERIAL_PORT>> internalSerial;
+#endif
 
 // Use the UART for Bluetooth in AT90USB configurations
 #if defined(USBCON) && ENABLED(BLUETOOTH)

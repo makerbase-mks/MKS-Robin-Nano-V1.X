@@ -18,13 +18,15 @@
  */
 #pragma once
 
-#include "HAL.h"
+#include <stdint.h>
 
-#define SW_SERIAL_PLACEHOLDER 1
+#ifndef HAVE_SW_SERIAL
+   #define SW_SERIAL_PLACEHOLDER 1
+#endif
 
 class SoftwareSerial {
 public:
-  SoftwareSerial(pin_t RX_pin, pin_t TX_pin);
+  SoftwareSerial(int8_t RX_pin, int8_t TX_pin);
 
   void begin(const uint32_t baudrate);
 

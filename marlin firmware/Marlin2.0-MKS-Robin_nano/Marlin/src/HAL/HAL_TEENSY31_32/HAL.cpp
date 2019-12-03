@@ -1,22 +1,24 @@
-/* **************************************************************************
-
- Marlin 3D Printer Firmware
- Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
- Copyright (c) 2016 Bob Cousins bobcousins42@googlemail.com
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
-****************************************************************************/
+/**
+ * Marlin 3D Printer Firmware
+ * Copyright (c) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ *
+ * Based on Sprinter and grbl.
+ * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
 
 /**
@@ -42,10 +44,10 @@ static const uint8_t pin2sc1a[] = {
 
 /*
   // disable interrupts
-  void cli(void) { noInterrupts(); }
+  void cli() { noInterrupts(); }
 
   // enable interrupts
-  void sei(void) { interrupts(); }
+  void sei() { interrupts(); }
 */
 
 void HAL_adc_init() {
@@ -54,9 +56,9 @@ void HAL_adc_init() {
   NVIC_ENABLE_IRQ(IRQ_FTM1);
 }
 
-void HAL_clear_reset_source(void) { }
+void HAL_clear_reset_source() { }
 
-uint8_t HAL_get_reset_source(void) {
+uint8_t HAL_get_reset_source() {
   switch (RCM_SRS0) {
     case 128: return RST_POWER_ON; break;
     case 64: return RST_EXTERNAL; break;
@@ -85,6 +87,6 @@ extern "C" {
 
 void HAL_adc_start_conversion(const uint8_t adc_pin) { ADC0_SC1A = pin2sc1a[adc_pin]; }
 
-uint16_t HAL_adc_get_result(void) { return ADC0_RA; }
+uint16_t HAL_adc_get_result() { return ADC0_RA; }
 
 #endif // __MK20DX256__
