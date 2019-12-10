@@ -132,9 +132,9 @@
 
 #if ENABLED(TOUCH_BUTTONS)
   #define TOUCH_CS_PIN     PB1   // SPI2_NSS
-  #define TOUCH_SCK_PIN    PB13  // SPI2_SCK
-  #define TOUCH_MISO_PIN   PB14  // SPI2_MISO
-  #define TOUCH_MOSI_PIN   PB15  // SPI2_MOSI
+  #define TOUCH_SCK_PIN    PB13
+  #define TOUCH_MOSI_PIN   PB15
+  #define TOUCH_MISO_PIN   PB14
 #endif
 
 // SPI1(PA7) & SPI3(PB5) not available

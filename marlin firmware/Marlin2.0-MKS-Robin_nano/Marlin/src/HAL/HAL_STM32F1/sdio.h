@@ -29,7 +29,6 @@
 // ------------------------
 // Defines
 // ------------------------
-
 #define SDMMC_CMD_GO_IDLE_STATE                       ((uint8_t)0)   /* Resets the SD memory card. */
 #define SDMMC_CMD_ALL_SEND_CID                        ((uint8_t)2)   /* Asks any card connected to the host to send the CID numbers on the CMD line. */
 #define SDMMC_CMD_SET_REL_ADDR                        ((uint8_t)3)   /* Asks the card to publish a new relative address (RCA). */
@@ -40,7 +39,6 @@
 #define SDMMC_CMD_READ_SINGLE_BLOCK                   ((uint8_t)17)  /* Reads single block of size selected by SET_BLOCKLEN in case of SDSC, and a block of fixed 512 bytes in case of SDHC and SDXC. */
 #define SDMMC_CMD_WRITE_SINGLE_BLOCK                  ((uint8_t)24)  /* Writes single block of size selected by SET_BLOCKLEN in case of SDSC, and a block of fixed 512 bytes in case of SDHC and SDXC. */
 #define SDMMC_CMD_APP_CMD                             ((uint8_t)55)  /* Indicates to the card that the next command is an application specific command rather than a standard command. */
-
 #define SDMMC_ACMD_APP_SD_SET_BUSWIDTH                ((uint8_t)6)   /* (ACMD6) Defines the data bus width to be used for data transfer. The allowed data bus widths are given in SCR register. */
 #define SDMMC_ACMD_SD_APP_OP_COND                     ((uint8_t)41)  /* (ACMD41) Sends host capacity support information (HCS) and asks the accessed card to send its operating condition register (OCR) content in the response on the CMD line. */
 #define SDMMC_ACMD_SD_APP_SET_CLR_CARD_DETECT         ((uint8_t)42)  /* (ACMD42) Connect/Disconnect the 50 KOhm pull-up resistor on CD/DAT3 (pin 1) of the card  */

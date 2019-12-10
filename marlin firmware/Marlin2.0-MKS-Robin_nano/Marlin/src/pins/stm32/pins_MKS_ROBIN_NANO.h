@@ -130,5 +130,8 @@
 
   #if ENABLED(TOUCH_BUTTONS)
     #define TOUCH_CS_PIN     PA7
+    #define TOUCH_SCK_PIN    PB13
+    #define TOUCH_MOSI_PIN   PB15
+    #define TOUCH_MISO_PIN   PB14
   #endif
 #endif

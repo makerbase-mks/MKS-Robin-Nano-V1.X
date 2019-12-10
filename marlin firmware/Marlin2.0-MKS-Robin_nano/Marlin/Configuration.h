@@ -1941,7 +1941,7 @@
 //#define MKS_MINI_12864
 #if ENABLED(MKS_MINI_12864)
 // if use MKS Robin Lite3 Board, you need enable MKS_LCD12864B and disable SHOW_BOOTSCREEN
-#define MKS_LCD12864B
+//#define MKS_LCD12864B
 #endif
 
 //
