@@ -109,6 +109,7 @@
 //
 #define BEEPER_PIN         PC5
 #define SD_DETECT_PIN      PD12
+#define SDIO_SUPPORT
 
 /**
  * Note: MKS Robin TFT screens use various TFT controllers.
