@@ -22,7 +22,7 @@ https://github.com/makerbase-mks/MKS-Robin-Nano-Firmware
 - This firmware is provided with robin_nano motherboard +robin_tft35 display.
 ### Release Notes：
 - The robin_nano35V_1.0.3 firmware is upgraded from robin_nano_v1.0.2. The following is the general modification of the upgrade test process.
-### V1.0.3:
+### v1.0.3:
 - Fix bug:When the temperature protection time is too long, the M303 cannot be adjusted.
 - Add two UI styles, retro and simple.
 - When the WIFI function is not enabled in the configuration file, the WIFI button in the interface is not displayed.
@@ -46,7 +46,7 @@ https://github.com/makerbase-mks/MKS-Robin-Nano-Firmware
 - Adding a pause position can be selected as an invalid item.
 - Modify the file name to exceed 30 bytes, and stop the problem that the Z axis is going back to the zero direction.
 
-### V1.0.4 Modifications:
+### v1.0.4
  - Fixed the issue of maximum temperature not reporting errors.
  - Fixed the problem that the nozzle is always heated during SD card read error.
 
