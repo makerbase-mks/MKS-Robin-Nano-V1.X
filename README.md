@@ -2,6 +2,10 @@
 If you want to change some function or add new function and so on, you can refer to MKS Robin Nano firmware source code and change it, build it and update it to MKS Robin Nano board...the URL link is as follows  
 https://github.com/makerbase-mks/MKS-Robin-Nano-Firmware
 
+## Related tutorials and Notice
+- User Manual. [click here](https://github.com/makerbase-mks/MKS-Robin-Nano/wiki/MKS-Robin-Nano-User-Manual)
+- Thank you very much for Miguel Angel Romero Sanchez(3D Maker ES)'s awesome video for MKS Robin Nano. [click here](https://www.youtube.com/watch?v=ucmC3b5-Wj4&feature=share&fbclid=IwAR2TWLEQ-a9ndR3HesDfjPQxTEMIGboHutLvQPGv8t6IWoZZtjgn14PVID4)
+
 ## Nano-firmware-v2.x.x
 - Parameters are set directly through the screen
 - After the parameter is set, it will work directly without restarting
@@ -18,6 +22,10 @@ https://github.com/makerbase-mks/MKS-Robin-Nano-Firmware
 - DIY style initial version.
 
 ## v1.x.x
+### v1.0.4
+ - Fixed the issue of maximum temperature not reporting errors.
+ - Fixed the problem that the nozzle is always heated during SD card read error.
+
 ### v1.0.3:
 - The robin_nano35V_1.0.3 firmware is upgraded from robin_nano_v1.0.2
 - Fix bug:When the temperature protection time is too long, the M303 cannot be adjusted.
@@ -42,11 +50,3 @@ https://github.com/makerbase-mks/MKS-Robin-Nano-Firmware
 - Fix bug:When the z-axis returns to zero maximum (the first z-axis limit is connected to zmax), when the double z limit is enabled, the z2 limit is connected to the xmax interface.When z returns to zero, when the z1 limit is triggered, the two z axes will stop at the same time.
 - Adding a pause position can be selected as an invalid item.
 - Modify the file name to exceed 30 bytes, and stop the problem that the Z axis is going back to the zero direction.
-
-### v1.0.4
- - Fixed the issue of maximum temperature not reporting errors.
- - Fixed the problem that the nozzle is always heated during SD card read error.
-
-## Related tutorials
-- User Manual, [click here](https://github.com/makerbase-mks/MKS-Robin-Nano/wiki/MKS-Robin-Nano-User-Manual)
-- Thank you very much for Miguel Angel Romero Sanchez(3D Maker ES)'s awesome video for MKS Robin Nano.[click here](https://www.youtube.com/watch?v=ucmC3b5-Wj4&feature=share&fbclid=IwAR2TWLEQ-a9ndR3HesDfjPQxTEMIGboHutLvQPGv8t6IWoZZtjgn14PVID4)
