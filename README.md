@@ -13,14 +13,15 @@ https://github.com/makerbase-mks/MKS-Robin-Nano-Firmware
 - More suitable for 3D printer manufacturers and users who often do not modify parameters
 
 ## Firmware version description
-## V2.x.x
-- DIY style initial version
+## v2.x.x
+### v2.0.0
+- DIY style initial version.
 
-## V1.x.x
+## v1.x.x
 ### Firmware description:
 - This firmware is provided with robin_nano motherboard +robin_tft35 display.
 ### Release Notes：
-- The robin_nano35V_1.0.3 firmware is upgraded from robin_nano_v1.0.2. The following is the general modification of the upgrade test process:
+- The robin_nano35V_1.0.3 firmware is upgraded from robin_nano_v1.0.2. The following is the general modification of the upgrade test process.
 ### V1.0.3:
 - Fix bug:When the temperature protection time is too long, the M303 cannot be adjusted.
 - Add two UI styles, retro and simple.
