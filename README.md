@@ -18,11 +18,8 @@ https://github.com/makerbase-mks/MKS-Robin-Nano-Firmware
 - DIY style initial version.
 
 ## v1.x.x
-### Firmware description:
-- This firmware is provided with robin_nano motherboard +robin_tft35 display.
-### Release Notes：
-- The robin_nano35V_1.0.3 firmware is upgraded from robin_nano_v1.0.2. The following is the general modification of the upgrade test process.
 ### v1.0.3:
+- The robin_nano35V_1.0.3 firmware is upgraded from robin_nano_v1.0.2
 - Fix bug:When the temperature protection time is too long, the M303 cannot be adjusted.
 - Add two UI styles, retro and simple.
 - When the WIFI function is not enabled in the configuration file, the WIFI button in the interface is not displayed.
