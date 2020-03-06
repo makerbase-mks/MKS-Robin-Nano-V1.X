@@ -52,3 +52,8 @@ https://github.com/makerbase-mks/MKS-Robin-Nano-Firmware
 - Fix bug:When the z-axis returns to zero maximum (the first z-axis limit is connected to zmax), when the double z limit is enabled, the z2 limit is connected to the xmax interface.When z returns to zero, when the z1 limit is triggered, the two z axes will stop at the same time.
 - Adding a pause position can be selected as an invalid item.
 - Modify the file name to exceed 30 bytes, and stop the problem that the Z axis is going back to the zero direction.
+
+## Note
+- Thank you for using MKS products. If you have any questions during use, please contact us in time and we will work with you to solve it.
+- For more product dynamic information and tutorial materials, you can always follow MKS's Facebook and GitHub and YouTube. Thank you!
+![](https://github.com/makerbase-mks/MKS-Robin-Nano/blob/master/hardware/Image/MKS_FGA.png)
