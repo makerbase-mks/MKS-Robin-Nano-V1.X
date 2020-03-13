@@ -8,6 +8,10 @@ https://github.com/makerbase-mks/MKS-Robin-Nano-Firmware
 - Thank you very much for Miguel Angel Romero Sanchez(3D Maker ES)'s awesome video for MKS Robin Nano.[click here](https://www.youtube.com/watch?v=ucmC3b5-Wj4&feature=share&fbclid=IwAR2TWLEQ-a9ndR3HesDfjPQxTEMIGboHutLvQPGv8t6IWoZZtjgn14PVID4)
 - Welcome to follow us on Facebook to learn about the company's latest developments.[click here](https://www.facebook.com/Makerbase.mks/)
 
+# Firmware
+The Nano firmware is developed by MKS, using the core of Marlin V1.x, adding many useful functions such as touch screen.
+And now Marlin2.0 has been adapted to MKS Robin Nano, too. You can check the link:[https://github.com/makerbase-mks/Mks-Robin-Nano-Marlin2.0-Firmware.git](https://github.com/makerbase-mks/Mks-Robin-Nano-Marlin2.0-Firmware.git "Marlin2.0-For-Robin-Nano")
+
 ## Nano-firmware-v2.x.x
 - Parameters are set directly through the screen
 - After the parameter is set, it will work directly without restarting
