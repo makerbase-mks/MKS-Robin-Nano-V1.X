@@ -25,6 +25,10 @@ And now Marlin2.0 has been adapted to MKS Robin Nano, too. You can check the lin
 
 ## Firmware version description
 ## v2.x.x
+### v2.0.1
+- Add Babystep function
+- Add Z_SAFE_HOMING function
+
 ### v2.0.0
 - DIY style initial version.
 
