@@ -5,7 +5,6 @@ https://github.com/makerbase-mks/MKS-Robin-Nano-Firmware
 ## Related tutorials and Notice
 - User Manual. [click here](https://github.com/makerbase-mks/MKS-Robin-Nano/wiki/MKS-Robin-Nano-User-Manual)
 - Firmware v2.0.0 release. [click here](https://www.youtube.com/watch?v=Nv3Zgs8XUt4)
-- MKS Robin Nano using videos for beginners. [click here](https://www.youtube.com/watch?v=d52u0Mss7fI)
 - Thank you very much for Miguel Angel Romero Sanchez(3D Maker ES)'s awesome video for MKS Robin Nano. [click here](https://www.youtube.com/watch?v=ucmC3b5-Wj4&feature=share&fbclid=IwAR2TWLEQ-a9ndR3HesDfjPQxTEMIGboHutLvQPGv8t6IWoZZtjgn14PVID4)
 - Thank you very much for 3DWork's introduction about MKS Robin Nano and Nano firmware. [click here](https://3dwork.io/mks-robin-nano-v1-2-analyzing-the-new-makerbase-32bit-boards/?fbclid=IwAR2QDFUOCh8_rZrIKsDni5x6sH0ezoaqEYq9zsHAT5BPOriKch0kDYLzZ0g&tdsourcetag=s_pctim_aiomsg)
 - Welcome to follow us on Facebook to learn about the company's latest developments. [click here](https://www.facebook.com/Makerbase.mks/)
