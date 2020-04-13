@@ -25,6 +25,11 @@ And now Marlin2.0 has been adapted to MKS Robin Nano, too. You can check the lin
 
 ## Firmware version description
 ## v2.x.x
+### v2.0.2
+- Fix the problem that the background color and font color of the dialog box are displayed incorrectly
+- Fix the problem that the leveling parameters of corexy models do not work
+- Compatible with BLTOUCH3.1
+
 ### v2.0.1
 - Add Babystep function
 - Add Z_SAFE_HOMING function
