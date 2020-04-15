@@ -1,6 +1,4 @@
 # MKS-Robin-Nano
-If you want to change some function or add new function and so on, you can refer to MKS Robin Nano firmware source code and change it, build it and update it to MKS Robin Nano board...the URL link is as follows  
-https://github.com/makerbase-mks/MKS-Robin-Nano-Firmware
 
 ## Related tutorials and Notice
 - User Manual. [click here](https://github.com/makerbase-mks/MKS-Robin-Nano/wiki/MKS-Robin-Nano-User-Manual)
@@ -10,8 +8,17 @@ https://github.com/makerbase-mks/MKS-Robin-Nano-Firmware
 - Welcome to follow us on Facebook to learn about the company's latest developments. [click here](https://www.facebook.com/Makerbase.mks/)
 
 # Firmware
-The Nano firmware is developed by MKS, using the core of Marlin V1.x, adding many useful functions such as touch screen.
-And now Marlin2.0 has been adapted to MKS Robin Nano, too. You can check the link:[https://github.com/makerbase-mks/Mks-Robin-Nano-Marlin2.0-Firmware.git](https://github.com/makerbase-mks/Mks-Robin-Nano-Marlin2.0-Firmware.git "Marlin2.0-For-Robin-Nano")
+There are seval firmwares fit Robin Nano:
+- [Marlin2.0-For-Robin-Nano](https://github.com/makerbase-mks/Mks-Robin-Nano-Marlin2.0-Firmware)
+This repository is based on Marlin2.0.x, added the [LittlevGL](https://github.com/littlevgl/lvgl), the colourful GUI. It is developed on PlatformIO, we hope more and more developers will participate the development of this repository.
+- [MKS-Robin-Nano](https://github.com/makerbase-mks/MKS-Robin-Nano-Firmware)
+This is the factory version of the MKS Robin Nano, the performance is most stable, but as the development IDE needs to pay, it is not suitable for individual users to secondary development
+- [Marlin2.0-For-Robin-Nano-old-version](https://github.com/makerbase-mks/Mks-Robin-Nano-Marlin2.0-Firmware-old-version.git)
+This version is also based on marlin2.0, but the version is relatively old, and the LCD display only supports marlin's native display, no cool GUI. Later, it will be slowly replaced by the version with cool GUI.
+
+---
+
+## The firmware version mentioned below is for the factory version ##
 
 ## Nano-firmware-v2.x.x
 - Parameters are set directly through the screen
