@@ -18,7 +18,7 @@ This version is also based on marlin2.0, but the version is relatively old, and 
 
 ---
 
-## The firmware version mentioned below is for the factory version ##
+## The firmware versions mentioned below are for the factory version ##
 
 ## Nano-firmware-v2.x.x
 - Parameters are set directly through the screen
