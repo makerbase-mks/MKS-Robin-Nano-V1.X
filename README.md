@@ -32,6 +32,10 @@ This version is also based on marlin2.0, but the version is relatively old, and 
 
 ## Firmware version description
 ## v2.x.x
+### v2.0.3.1
+- Fix the display problem of "More" interface
+- Fix the problem of print pause when awakening
+
 ### v2.0.3
 - Add quick pause function
 - Support mks ups module
