@@ -1,4 +1,12 @@
 # MKS-Robin-Nano
+## MKS Robin Nano V2.0
+- Support uart mode and spi mode.
+- Support SENSORLESS_HOMING function.
+- Use the box header connector, more solid and stable.
+- Onboard 4k EEPROM.
+- Firmware is based on Marlin 2.x.
+- Transplanted the cool LVGL graphics library to marlin.
+- Most of the machine parameters are opened on the touch screen, users can easily configure, no need to modify the configuration file.
 
 ## Related tutorials and Notice
 - User Manual. [click here](https://github.com/makerbase-mks/MKS-Robin-Nano/wiki/MKS-Robin-Nano-User-Manual)
@@ -32,6 +40,18 @@ This version is also based on marlin2.0, but the version is relatively old, and 
 
 ## Firmware version description
 ## v2.x.x
+
+### v2.0.3.2
+- Increase the pause position can be configured online.
+
+### v2.0.3.1
+- Fix the display problem of "More" interface
+- Fix the problem of print pause when awakening
+
+### v2.0.3
+- Add quick pause function
+- Support mks ups module
+
 ### v2.0.2
 - Fix the problem that the background color and font color of the dialog box are displayed incorrectly
 - Fix the problem that the leveling parameters of corexy models do not work
