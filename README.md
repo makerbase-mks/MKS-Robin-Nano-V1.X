@@ -1,12 +1,5 @@
 # MKS-Robin-Nano
-## MKS Robin Nano V2.0
-- Support uart mode and spi mode.
-- Support SENSORLESS_HOMING function.
-- Use the box header connector, more solid and stable.
-- Onboard 4k EEPROM.
-- Firmware is based on Marlin 2.x.
-- Transplanted the cool LVGL graphics library to marlin.
-- Most of the machine parameters are opened on the touch screen, users can easily configure, no need to modify the configuration file.
+About MKS Robin Nano V2.0 project information, you can refer to [Nano V2](https://github.com/makerbase-mks/MKS-Robin-Nano-V2)
 
 ## Related tutorials and Notice
 - V1.2 user Manual. [click here](https://github.com/makerbase-mks/MKS-Robin-Nano/wiki/MKS-Robin-Nano-User-Manual)
