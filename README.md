@@ -1,5 +1,5 @@
 # MKS-Robin-Nano
-About MKS Robin Nano V2.0 project information, you can refer to [Nano V2](https://github.com/makerbase-mks/MKS-Robin-Nano-V2)
+About MKS Robin Nano V2.0 project information, you can refer to [Nano V2](https://github.com/makerbase-mks/MKS-Robin-Nano-V2) and [Nano V2 Wiki](https://github.com/makerbase-mks/MKS-Robin-Nano-V2/wiki)
 
 ## Related tutorials and Notice
 - V1.2 user Manual. [click here](https://github.com/makerbase-mks/MKS-Robin-Nano/wiki/MKS-Robin-Nano-User-Manual)
