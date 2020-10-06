@@ -1,5 +1,5 @@
-# MKS-Robin-Nano V1.x
-Compared with Robin Nano V1.x, Robin Nano V2.x updates as follow:
+# About MKS-Robin-Nano V1.x and V2.x
+The differences between Robin Nano V1.x and Robin Nano V2.x are as follow:
 
 
 ```
@@ -17,7 +17,7 @@ Motor Driver mode       STEP/DIR                                         STEP/DI
 On board EEPROM         2KB                                               4KB                          
 ————————————————————————————————————————————————————————————————————————————————————————————————————————
 ```
-About MKS Robin Nano V2.x project information, you can refer to [Nano V2](https://github.com/makerbase-mks/MKS-Robin-Nano-V2) and [Nano V2 Wiki](https://github.com/makerbase-mks/MKS-Robin-Nano-V2/wiki)
+This RP is about Robin Nano V1.x, about MKS Robin Nano V2.x project information, you can refer to [Nano V2](https://github.com/makerbase-mks/MKS-Robin-Nano-V2) and [Nano V2 Wiki](https://github.com/makerbase-mks/MKS-Robin-Nano-V2/wiki)
 
 ## Related tutorials and Notice
 - V1.2 user Manual. [click here](https://github.com/makerbase-mks/MKS-Robin-Nano/wiki/MKS-Robin-Nano-User-Manual)
