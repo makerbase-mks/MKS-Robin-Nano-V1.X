@@ -20,8 +20,8 @@ On board EEPROM         2KB                                               4KB
 This RP is about Robin Nano V1.x, about MKS Robin Nano V2.x project information, you can refer to [Nano V2](https://github.com/makerbase-mks/MKS-Robin-Nano-V2) and [Nano V2 Wiki](https://github.com/makerbase-mks/MKS-Robin-Nano-V2/wiki)
 
 ## Related tutorials and Notice
-- V1.2 user Manual. [click here](https://github.com/makerbase-mks/MKS-Robin-Nano/wiki/MKS-Robin-Nano-User-Manual)
-- Firmware v2.0.0 release. [click here](https://www.youtube.com/watch?v=Nv3Zgs8XUt4)
+- Robin nano V1.2 user Manual. [click here](https://github.com/makerbase-mks/MKS-Robin-Nano/wiki/MKS-Robin-Nano-User-Manual)
+- Description of firmware v2.0.0. [click here](https://www.youtube.com/watch?v=Nv3Zgs8XUt4)
 - Thank you very much for Miguel Angel Romero Sanchez(3D Maker ES)'s awesome video for MKS Robin Nano. [click here](https://www.youtube.com/watch?v=ucmC3b5-Wj4&feature=share&fbclid=IwAR2TWLEQ-a9ndR3HesDfjPQxTEMIGboHutLvQPGv8t6IWoZZtjgn14PVID4)
 - Thank you very much for 3DWork's introduction about MKS Robin Nano and Nano firmware. [English click here](https://3dwork.io/en/mks-robin-nano-v1-2-analyzing-the-new-makerbase-32bit-boards/), [Spanish click here](https://3dwork.io/mks-robin-nano-v1-2-analyzing-the-new-makerbase-32bit-boards/?fbclid=IwAR2QDFUOCh8_rZrIKsDni5x6sH0ezoaqEYq9zsHAT5BPOriKch0kDYLzZ0g&tdsourcetag=s_pctim_aiomsg)
 - Welcome to follow us on Facebook to learn about the company's latest developments. [click here](https://www.facebook.com/Makerbase.mks/)
