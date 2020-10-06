@@ -1,5 +1,23 @@
-# MKS-Robin-Nano
-About MKS Robin Nano V2.0 project information, you can refer to [Nano V2](https://github.com/makerbase-mks/MKS-Robin-Nano-V2) and [Nano V2 Wiki](https://github.com/makerbase-mks/MKS-Robin-Nano-V2/wiki)
+# MKS-Robin-Nano V1.x
+Compared with Robin Nano V1.x, Robin Nano V2.x updates as follow:
+
+
+```
+————————————————————————————————————————————————————————————————————————————————————————————————————————
+                        MKS Robin Nano V1.x                              MKS Robin Nano V2.0            
+————————————————————————————————————————————————————————————————————————————————————————————————————————
+Firmware support        MKS Robin Nano Firmware/Above Marlin2.0.6        Above Marlin2.0.6   
+————————————————————————————————————————————————————————————————————————————————————————————————————————
+LCD Type and Interface  MKS Robin TFT35(FSMC)                            MKS TS35(SPI),LCD12864,LCD2004    
+————————————————————————————————————————————————————————————————————————————————————————————————————————
+Rotary Encoder          Not support                                      Support  
+————————————————————————————————————————————————————————————————————————————————————————————————————————
+Motor Driver mode       STEP/DIR                                         STEP/DIR,TMC-UART,TMC-SPI    
+————————————————————————————————————————————————————————————————————————————————————————————————————————
+On board EEPROM         2KB                                               4KB                          
+————————————————————————————————————————————————————————————————————————————————————————————————————————
+```
+About MKS Robin Nano V2.x project information, you can refer to [Nano V2](https://github.com/makerbase-mks/MKS-Robin-Nano-V2) and [Nano V2 Wiki](https://github.com/makerbase-mks/MKS-Robin-Nano-V2/wiki)
 
 ## Related tutorials and Notice
 - V1.2 user Manual. [click here](https://github.com/makerbase-mks/MKS-Robin-Nano/wiki/MKS-Robin-Nano-User-Manual)
