@@ -27,13 +27,11 @@ This RP is about Robin Nano V1.x, about MKS Robin Nano V2.x project information,
 - Welcome to follow us on Facebook to learn about the company's latest developments. [click here](https://www.facebook.com/Makerbase.mks/)
 
 # Firmware
-There are seval firmwares fit Robin Nano:
+There are seval firmwares fit Robin Nano V1.x:
 - [Marlin2.0-For-Robin-Nano](https://github.com/makerbase-mks/Mks-Robin-Nano-Marlin2.0-Firmware)
-This repository is based on Marlin2.0.x, added the [LittlevGL](https://github.com/littlevgl/lvgl), the colourful GUI. It is developed on PlatformIO, we hope more and more developers will participate the development of this repository.
+This repository is based on Marlin2.0.x, added the [LittlevGL](https://github.com/littlevgl/lvgl), the colourful GUI.  It is developed on PlatformIO, we hope more and more developers will participate the development of this repository.
 - [MKS-Robin-Nano](https://github.com/makerbase-mks/MKS-Robin-Nano-Firmware)
-This is the factory version of the MKS Robin Nano, the performance is most stable, but as the development IDE needs to pay, it is not suitable for individual users to secondary development
-- [Marlin2.0-For-Robin-Nano-old-version](https://github.com/makerbase-mks/Mks-Robin-Nano-Marlin2.0-Firmware-old-version.git)
-This version is also based on marlin2.0, but the version is relatively old, and the LCD display only supports marlin's native display, no cool GUI. Later, it will be slowly replaced by the version with cool GUI.
+This is the factory version of the MKS Robin Nano V1.x, the performance is most stable, but as the development IDE needs to pay, it is not suitable for individual users to secondary development
 
 ---
 
