@@ -1,5 +1,13 @@
 About
 Robin_nano_1.2 motherboard firmware: add color interface based on marlin2.0.x
 
+Update
+
+1.Marlin-bugfix2.0.x-MKS-2.1.0
+Initial release version
+
+2.Marlin-bugfix2.0.x-MKS-2.1.1
+Support mks wifi function
+
 Source link
 https://github.com/makerbase-mks/Mks-Robin-Nano-Marlin2.0-Firmware
