@@ -50,6 +50,26 @@ This is the factory version of the MKS Robin Nano V1.x, the performance is most 
 ## Firmware version description
 ## v2.x.x
 
+### v2.0.3.6
+- BootLoader and firmware newly add ILI9486 screen driver.
+- Fixed the problem that the double Z double limit function is abnormal when the Z-axis zero return direction is at the maximum value.
+- Firmware optimization for the white screen problem.
+
+### v2.0.3.5
+- Repair the problem of no temperature protection in preheating.
+- Add German and Japanese.
+- Modify the motor unlocking time to 20 minutes.
+
+### v2.0.3.4
+- Online tuning can be configured.
+- Fix the background color of the return button in the print more interface.
+- Fixed the problem that the button font offset is not saved.
+- Fixed the problem of not saving after shutting down.
+
+### v2.0.3.3
+- Added the function of sending gcode commands online.
+- Fix BL_TOUCH 3.1 unsuccessful leveling problem.
+
 ### v2.0.3.2
 - Increase the pause position can be configured online.
 
