@@ -19,6 +19,21 @@ On board EEPROM         2KB                                               4KB
 ```
 This RP is about Robin Nano V1.x, about MKS Robin Nano V2.x project information, you can refer to [Nano V2](https://github.com/makerbase-mks/MKS-Robin-Nano-V2) and [Nano V2 Wiki](https://github.com/makerbase-mks/MKS-Robin-Nano-V2/wiki)
 
+## Compare between Robin Nano V1.2 and V1.3
+| ITEMS      |  Robin Nano V1.2  | Robin Nano V1.3 | Robin Nano-S V1.3 |
+|------------|--------------------|--------------------|--------------------|
+| MCU        | STM32F103VET6(72MHz) | STM32F407VET6（168MHz）| STM32F407VET6（168MHz）|
+| FLASH/RAM | 512KB FLASH/64KB RAM | 512KB FLASH/192KB RAM | 512KB FLASH/192KB RAM |
+| Drivers | Pluggable | Pluggable | 4 TMC2225 standard mode + 1 Pluggable|
+| Firmware offset | 7000 | 8000 | 8000 |
+
+## Tips
+- MKS Robin Nano V1.3 and Nano-S V1.3 the pin map same as the MKS Robin Nano V1.2
+- Please donot update  V1.2 version's firmware to V1.3 motherboard
+- MKS Robin Nano V1.3 and Nano-S V1.3 use Marlin 2.0.x firmware settings
+  - In platformio.ini file set:  default_envs = mks_robin_nano_v1_3_f4
+  - In Confiuration.h file set: #define SERIAL_PORT 3; #define MOTHERBOARD BOARD_MKS_ROBIN_NANO_V1_3_F4
+
 ## Related tutorials and Notice
 - Robin nano V1.2 user Manual. [click here](https://github.com/makerbase-mks/MKS-Robin-Nano/wiki/MKS-Robin-Nano-User-Manual)
 - Description of firmware v2.0.0. [click here](https://www.youtube.com/watch?v=Nv3Zgs8XUt4)
