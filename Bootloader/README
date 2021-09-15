@@ -1,1 +1,31 @@
+# MKS Robin Nano V1.x Bootloader
+- Robin_nano35_boot_200608.hex for MKS Robin Nano V1.2_00x hardware
+- Robin_nano35_v13_f4_boot_210615.hex for MKS Robin Nano V1.3 and MKS Robin Nano-S V1.3 hardware
 
+# How to upload it to board
+- Use upload tool, ST-LINK or J-LINK
+- Connect to board's SWD interface
+  ```
+             MKS Robin Nano V1.3                  
+         ___________________________                 
+      2 | 3.3V       GND        GND | 6      
+ J11  1 | PA13(DIO)  PA14(CLK)  RST | 5      
+         ---------------------------  
+  
+             MKS Robin Nano-S V1.3
+         ___________________________                 
+  J1  2 | 3.3V       GND        GND | 6      
+ SWD  1 | PA13(DIO)  PA14(CLK)  RST | 5      
+         --------------------------- 
+  ```
+- Programming bootloader steps
+  - Download JFLASH
+  - Run JFlash.exe
+  - Open project settings file: File->Open project
+    - MKS Robin Nano V1.2 select: STM32F103VET6.jflash
+	- MKS Robin Nano V1.3 or Nano-S V1.3 select: STM32F407VET6.jflash
+  - Open bootloader file: File->Open data file
+    - MKS Robin Nano V1.2 select: Robin_nano35_boot_200608.hex
+	- MKS Robin Nano V1.3 or Nano-S V1.3 select: Robin_nano35_v13_f4_boot_210615.hex
+  - Run: Target-connect, Target-Auto and wait upload bootloader hex file
+  
