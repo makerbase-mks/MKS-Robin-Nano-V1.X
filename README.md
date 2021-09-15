@@ -33,6 +33,7 @@ This RP is about Robin Nano V1.x, about MKS Robin Nano V2.x project information,
 - MKS Robin Nano V1.3 and Nano-S V1.3 use Marlin 2.0.x firmware settings
   - In platformio.ini file set:  default_envs = mks_robin_nano_v1_3_f4
   - In Confiuration.h file set: #define SERIAL_PORT 3; #define MOTHERBOARD BOARD_MKS_ROBIN_NANO_V1_3_F4
+- If you need reupload bootloader to board, you can refer to Bootloader path README 
 
 ## Related tutorials and Notice
 - Robin nano V1.2 user Manual. [click here](https://github.com/makerbase-mks/MKS-Robin-Nano/wiki/MKS-Robin-Nano-User-Manual)
