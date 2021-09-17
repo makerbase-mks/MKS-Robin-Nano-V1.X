@@ -30,7 +30,7 @@
   - Run: Target-connect, Target-Auto and wait upload bootloader hex file
   
 - Programming(Use ST-LINK)
-  - Download [STM32 ST-LINK Utility v4.6.0]()
+  - Download STM32 ST-LINK Utility v4.6.0：https://github.com/makerbase-mks/MKS-Robin-Nano-V1.X/blob/master/Tool/en.stsw-link004_v4.6.0.zip
   - Install and run: STM32 ST-LINK Utility
   - Open bootloader: File -> Open file
     - MKS Robin Nano V1.2 select: Robin_nano35_boot_200608.hex
